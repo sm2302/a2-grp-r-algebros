@@ -158,9 +158,7 @@ main <- function(){
 
 
 main()
-
 ```
-
 ## References
 Bertrand's Paradox by Amin Asadi
 
