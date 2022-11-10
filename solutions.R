@@ -42,3 +42,25 @@ draw.chord.by.midpoint <- function(center.x, center.y, radius,
   
   return(draw.chord(points, side.length));
 }
+
+method.one <- function(center.x, center.y, radius){
+  endpoint1.theta <- runif(1,0,2*pi);
+  endpoint2.theta <- runif(1,0,2*pi);
+  endpoint1.x = center.x + radius * cos(endpoint1.theta);
+  endpoint1.y = center.y + radius * sin(endpoint1.theta);
+  endpoint2.x = center.x + radius * cos(endpoint2.theta);
+  endpoint2.y = center.y + radius * sin(endpoint2.theta);
+  midpoint.x = ( endpoint1.x + endpoint2.x )/2;
+  midpoint.y = (endpoint1.y + endpoint2.y)/2;
+  return(c(midpoint.x,midpoint.y));
+}
+
+
+method.two <- function(center.x, center.y, radius){
+  radius.theta = runif(1,0,2*pi);
+  d.from.center = runif(1,0,radius);
+  midpoint.x = center.x + d.from.center * cos(radius.theta);
+  midpoint.y = center.y + d.from.center  * sin(radius.theta);
+  
+  return(c(midpoint.x,midpoint.y));
+}
