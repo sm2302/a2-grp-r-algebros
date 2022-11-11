@@ -20,7 +20,7 @@ The three different methods above, all seemingly valid, yield different results 
 
 ## Solution
 
-== Animation of the solution will pop up on an external browser==
+==Animation of the solution will pop up on an external browser==.
 
 ```
 library(animation);
