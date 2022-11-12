@@ -18,46 +18,151 @@ Three different solutions are presented, each hinging on the method of generatin
 
 The three different methods above, all seemingly valid, yield different results for the probability in question! The exact answer can be worked out using geometric reasoning, but the goal of this assignment is to provide a visual and empirical way of calculating the probabilities.
 
-## Instructions
+## Solution
 
-> Objective: Show, using simulation and appropriate visualisations, that the three methods above yield different $p$ values.
+**Animation of the solution will pop up on an external browser** 😃
 
-As a group, you will write R code in a single .R script (named `solution.R`) that performs the intended solutions. This script should be able to be run without errors.
-
-Consider the following points when writing your solutions:
-
-- You are free to choose the format of your solutions (`print()`, `cat()`, data frames, tibbles, ggplots, writing functions, etc.)--but note that marks are awarded for clarity.
-
-- Comment on your code to make its intention clearer (but don't go overboard!)
-
-- You may split the task among yourselves however you wish, as long as there is a proportional effort from all team members.
-
-- If you wish, you may present your solutions within GitHub (e.g. by appending a new section at the top of this README.md file and/or by using GitHub pages).
-
-## Tips
-
-This assignment assumes some basic knowledge of geometry and simple probability, including but not limited to
-
-- The equation of a circle with radius $r$ centred at $x_0$ and $y_0$ is given by $(x-x_0)^2 + (y-y_0)^2 = r^2$ (assuming a cartesian system of coordinates $(x,y)$ ).
-
-- Basic trigonometry angles such as $\sin \theta$ and $\cos \theta$ and Pythagoras theorem $a^2 + b^2 = c^2$.
-
-- Calculating distance between two points in 2-D space (Euclidean distance).
-
-- The principle of indifference: The probability $\Pr(A)$ of an event $A$ happening is given by the ratio of the number of favourable outcomes to the total number of outcomes in the sample space. That is, in a random experiment, suppose $n(S)$ denotes the total number of outcomes, and $n(A)$ denotes the number of outcomes involving $A$, then $$\Pr(A) = \frac{n(A)}{n(S)}.$$
-
-In addition, you might find R's `runif()` function helpful for random number generation.
+```
+library(animation);
+library(plotrix);
 
 
+line.length <- function(points){
+  return(norm(points[1,]-points[2,], type="2"));
+}
 
 
+draw.chord <- function(points, threshold){
+  color <- "blue";
+  chord.length <- line.length(points);
+  longer <- chord.length > threshold;
+  if(longer){
+    color <- "red";
+  }
+  lines(points[,1], points[,2], col=color);
+  
+  return(longer);
+}
 
 
+draw.chord.by.midpoint <- function(center.x, center.y, radius,
+                                   midpoint.x, midpoint.y){
+  
+  side.length <- sin(pi/3)*radius*2;
+  
+  len <- sqrt((midpoint.x-center.x)^2+(midpoint.y-center.y)^2);
+  theta <- atan2(midpoint.y-center.y, midpoint.x-center.x);
+  
+  chord.halflength = sqrt(radius^2-len^2);
+  theta1 <- theta + pi/2;
+  theta2 <- theta1 + pi;
+  
+  chord.endpoint1.x <- midpoint.x + cos(theta1)*chord.halflength;
+  chord.endpoint1.y <- midpoint.y + sin(theta1)*chord.halflength;
+  chord.endpoint2.x <- midpoint.x + cos(theta2)*chord.halflength;
+  chord.endpoint2.y <- midpoint.y + sin(theta2)*chord.halflength;
+  
+  points <- matrix(c(chord.endpoint1.x, chord.endpoint2.x,
+                     chord.endpoint1.y, chord.endpoint2.y), nrow=2, ncol=2)
+  
+  return(draw.chord(points, side.length));
+}
+
+# METHOD A -----------------------------------------
+method.one <- function(center.x, center.y, radius){
+  endpoint1.theta <- runif(1,0,2*pi);
+  endpoint2.theta <- runif(1,0,2*pi);
+  endpoint1.x = center.x + radius * cos(endpoint1.theta);
+  endpoint1.y = center.y + radius * sin(endpoint1.theta);
+  endpoint2.x = center.x + radius * cos(endpoint2.theta);
+  endpoint2.y = center.y + radius * sin(endpoint2.theta);
+  midpoint.x = ( endpoint1.x + endpoint2.x )/2;
+  midpoint.y = (endpoint1.y + endpoint2.y)/2;
+  return(c(midpoint.x,midpoint.y));
+}
+
+# METHOD B -----------------------------------------
+method.two <- function(center.x, center.y, radius){
+  radius.theta = runif(1,0,2*pi);
+  d.from.center = runif(1,0,radius);
+  midpoint.x = center.x + d.from.center * cos(radius.theta);
+  midpoint.y = center.y + d.from.center  * sin(radius.theta);
+  
+  return(c(midpoint.x,midpoint.y));
+}
+
+# METHOD C -----------------------------------------
+method.three <- function(center.x, center.y, radius){
+  midpoint.x = center.x - radius;
+  midpoint.y = center.y - radius;
+  while((midpoint.x-center.x) ^ 2 + (midpoint.y-center.y) ^ 2 > radius ^ 2){
+    dx.from.edge = runif(1,0,2*radius) ;
+    dy.from.edge = runif(1,0,2*radius) ;
+    midpoint.x = center.x - radius + dx.from.edge ;
+    midpoint.y = center.y - radius + dy.from.edge ;  
+  }
+  return(c(midpoint.x,midpoint.y));
+}
+
+# MAIN---------------------------------
+main <- function(){
+  n.trials <- 50;
+  xrange <- 49;
+  yrange <- 49;
+  center.x <- 25;
+  center.y <- 25;
+  radius <- 24;
+  hold.frames <- 25;
+  
+  generate.midpoints <- function(method){
+    midpoints <- vector(mode="list", length=n.trials);
+    
+    for(iteration in 1:n.trials){
+      midpoints[[iteration]] <- method(center.x, center.y, radius);
+    }
+    
+    return(midpoints);
+  }
+  
+  draw.frame <- function(midpoints, n.chords){
+    longer <- 0;
+    total <- 0;
+    plot(1:xrange, 1:yrange, type="n", xlab="", ylab="", main="Bertrand", asp=1);
+    draw.circle(center.x, center.y, radius);
+    for(chord.idx in 1:n.chords){
+      total <- total + 1;
+      midpoint <- midpoints[[chord.idx]];
+      is.longer <- draw.chord.by.midpoint(center.x, center.y, radius,
+                                          midpoint[1], midpoint[2]);
+      if(is.longer){
+        longer <- longer + 1;
+      }
+    }
+    string <- sprintf("Total: %d, Longer: %d, Probability: %f",
+                      total, longer, longer/total);
+    mtext(string);
+  }
+  
+  ani.options(interval=0.1);
+  ms <- c(method.one, method.two, method.three);
+  saveHTML({
+    for(method in ms){
+      midpoints <- generate.midpoints(method);
+      for(iteration in 1:n.trials){
+        draw.frame(midpoints, iteration);
+      }
+      for(i in 1:hold.frames){
+        draw.frame(midpoints, n.trials);
+      }
+    }
+  });
+}
 
 
-
-
-
+main()
+```
+## References
+Bertrand's Paradox by Amin Asadi
 
 
 
